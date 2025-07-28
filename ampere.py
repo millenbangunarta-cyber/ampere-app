@@ -62,7 +62,7 @@ st.markdown(
         background-repeat: no-repeat;
         background-attachment: fixed;
     }
-       label {
+    label {
         color: white !important;
         font-weight: bold;
     }
@@ -75,7 +75,7 @@ st.markdown(
 if "nama_motor" not in st.session_state:
     st.session_state.nama_motor = ""
 if "ampere_motor" not in st.session_state:
-    st.session_state.ampere_motor = 0
+    st.session_state.ampere_motor = 0.0  # <- Pastikan ini float
 if "submit_result" not in st.session_state:
     st.session_state.submit_result = None
 if "submit_chart" not in st.session_state:
@@ -86,7 +86,14 @@ st.markdown("<h1 style='color: white;'>⚡ Pencatatan Arus Motor</h1>", unsafe_a
 
 # Input pengguna
 nama_motor = st.text_input('🔧 Nama Motor', value=st.session_state.nama_motor, key="nama_motor")
-ampere_motor = st.number_input('⚡ Arus Motor (Ampere)', min_value=0.0, max_value=500.0, value=st.session_state.ampere_motor, step=0.1, key="ampere_motor")
+ampere_motor = st.number_input(
+    '⚡ Arus Motor (Ampere)',
+    min_value=0.0,
+    max_value=500.0,
+    value=float(st.session_state.ampere_motor),  # <- Pastikan ini float juga
+    step=0.1,
+    key="ampere_motor"
+)
 
 # Fungsi ketika tombol submit ditekan
 def submit_callback():
@@ -103,7 +110,7 @@ def submit_callback():
 
         # Reset input
         st.session_state.nama_motor = ""
-        st.session_state.ampere_motor = 0
+        st.session_state.ampere_motor = 0.0
 
 # Tombol submit
 st.button("Submit", on_click=submit_callback)
