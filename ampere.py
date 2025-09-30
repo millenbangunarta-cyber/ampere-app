@@ -49,6 +49,7 @@ def catat_data(nama_motor, ampere_motor):
     
     return f"Data berhasil disimpan!\nWaktu: {waktu_input}\nMotor: {nama_motor}\nArus: {ampere_motor} A\nStatus: {status_ampere}", buf
 
+
 # --- Streamlit App ---
 
 # Tambahkan styling background
@@ -75,7 +76,7 @@ st.markdown(
 if "nama_motor" not in st.session_state:
     st.session_state.nama_motor = ""
 if "ampere_motor" not in st.session_state:
-    st.session_state.ampere_motor = 0.0  # <- Pastikan ini float
+    st.session_state.ampere_motor = 0.0
 if "submit_result" not in st.session_state:
     st.session_state.submit_result = None
 if "submit_chart" not in st.session_state:
@@ -90,7 +91,7 @@ ampere_motor = st.number_input(
     '⚡ Arus Motor (Ampere)',
     min_value=0.0,
     max_value=500.0,
-    value=float(st.session_state.ampere_motor),  # <- Pastikan ini float juga
+    value=float(st.session_state.ampere_motor),
     step=0.1,
     key="ampere_motor"
 )
@@ -124,10 +125,28 @@ if st.session_state.submit_result:
         if st.session_state.submit_chart:
             st.image(st.session_state.submit_chart)
 
-# Tombol download CSV
+# --- MENU DATA ---
 if os.path.exists("data_motor.csv"):
     with open("data_motor.csv", "rb") as file:
         st.download_button(label="📥 Unduh Data CSV", data=file, file_name="data_motor.csv")
+
+    # RESET SEMUA DATA
+    if st.button("🗑️ Reset Semua Data"):
+        os.remove("data_motor.csv")
+        st.session_state.submit_result = None
+        st.session_state.submit_chart = None
+        st.success("Semua data berhasil direset!")
+
+    # RESET DATA MOTOR TERTENTU
+    df_all = pd.read_csv("data_motor.csv")
+    if not df_all.empty:
+        motor_list = df_all["Nama Motor"].unique().tolist()
+        motor_to_delete = st.selectbox("🗑️ Pilih motor yang mau dihapus datanya:", motor_list)
+
+        if st.button("Hapus Data Motor Ini"):
+            df_new = df_all[df_all["Nama Motor"] != motor_to_delete]
+            df_new.to_csv("data_motor.csv", index=False)
+            st.success(f"Data untuk motor '{motor_to_delete}' berhasil dihapus.")
 
 # Footer
 st.markdown(
