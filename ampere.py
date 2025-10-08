@@ -9,31 +9,24 @@ import io
 
 # Fungsi untuk mencatat data motor dan ampere, serta membuat grafik
 def catat_data(nama_motor, ampere_motor):
-    # Gunakan zona waktu Kalimantan Timur (WITA)
     tz = timezone('Asia/Makassar')
     waktu_input = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
     
-    # Validasi arus
     if ampere_motor > 100:
         status_ampere = "Warning: Arus terlalu tinggi!"
     else:
         status_ampere = "Arus normal."
     
-    # Simpan data ke DataFrame
     data = pd.DataFrame([[waktu_input, nama_motor, ampere_motor, status_ampere]],
                         columns=["Waktu", "Nama Motor", "Arus (Ampere)", "Status"])
 
-    # Simpan ke file CSV
     if os.path.exists("data_motor.csv"):
         data.to_csv("data_motor.csv", mode='a', header=False, index=False)
     else:
         data.to_csv("data_motor.csv", index=False)
 
-    # Membuat grafik arus
     fig, ax = plt.subplots()
     df = pd.read_csv("data_motor.csv")
-    
-    # Filter grafik berdasarkan nama motor yang sama
     df = df[df["Nama Motor"] == nama_motor]
     
     ax.plot(pd.to_datetime(df["Waktu"]), df["Arus (Ampere)"], marker='o', color='orange', label="Arus (Ampere)")
@@ -42,7 +35,6 @@ def catat_data(nama_motor, ampere_motor):
     ax.set_title(f"Tren Arus Motor: {nama_motor}")
     ax.legend()
 
-    # Simpan grafik ke BytesIO
     buf = io.BytesIO()
     fig.savefig(buf, format="png")
     buf.seek(0)
@@ -85,8 +77,25 @@ if "submit_chart" not in st.session_state:
 # Judul Aplikasi
 st.markdown("<h1 style='color: white;'>⚡ Pencatatan Arus Motor</h1>", unsafe_allow_html=True)
 
-# Input pengguna
-nama_motor = st.text_input('🔧 Nama Motor', value=st.session_state.nama_motor, key="nama_motor")
+# --- Dapatkan daftar motor dari file jika ada ---
+motor_list = []
+if os.path.exists("data_motor.csv"):
+    df_existing = pd.read_csv("data_motor.csv")
+    motor_list = sorted(df_existing["Nama Motor"].unique().tolist())
+
+# Tambahkan opsi "Motor Baru"
+motor_list_display = ["➕ Tambah Motor Baru"] + motor_list
+
+# Pilihan motor
+selected_option = st.selectbox("🔧 Pilih Motor", motor_list_display)
+
+# Jika pilih tambah baru, tampilkan input text
+if selected_option == "➕ Tambah Motor Baru":
+    nama_motor = st.text_input("Masukkan nama motor baru:")
+else:
+    nama_motor = selected_option
+
+# Input arus motor
 ampere_motor = st.number_input(
     '⚡ Arus Motor (Ampere)',
     min_value=0.0,
@@ -98,12 +107,12 @@ ampere_motor = st.number_input(
 
 # Fungsi ketika tombol submit ditekan
 def submit_callback():
-    if st.session_state.nama_motor.strip() == "":
+    if nama_motor.strip() == "":
         st.session_state.submit_result = "warning"
         st.session_state.submit_chart = None
     else:
         result, chart = catat_data(
-            st.session_state.nama_motor,
+            nama_motor,
             st.session_state.ampere_motor
         )
         st.session_state.submit_result = result
